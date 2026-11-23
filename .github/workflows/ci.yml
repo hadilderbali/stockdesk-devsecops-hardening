@@ -123,6 +123,7 @@ jobs:
         with:
           persist-credentials: false
 
+     
       - name: Deploy to Kubernetes
         env:
           KUBECONFIG_CONTENT: ${{ secrets.KUBECONFIG }}
@@ -139,10 +140,6 @@ jobs:
           sed "s|IMAGE_REF_SET_BY_CI|$IMAGE_REF|" \
             k8s/deployment.yaml |
             kubectl apply -n stockdesk -f -
-
-          kubectl apply -n stockdesk \
-            -f k8s/networkpolicy.yaml \
-            -f k8s/pdb.yaml
 
           kubectl rollout status deployment/stockdesk \
             -n stockdesk --timeout=120s

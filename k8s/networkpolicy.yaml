@@ -1,4 +1,4 @@
-﻿apiVersion: networking.k8s.io/v1
+apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: default-deny
@@ -18,8 +18,7 @@ spec:
       app: stockdesk
   policyTypes: ["Ingress", "Egress"]
   ingress:
-
-
+  
     - from:
         - namespaceSelector:
             matchLabels:

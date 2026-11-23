@@ -30,6 +30,7 @@ The objective is to reduce security risks before the application is exposed to e
 - Replaced the LoadBalancer Service with an internal ClusterIP Service.
 - Added NetworkPolicy and PodDisruptionBudget manifests.
 - Added namespace-scoped RBAC for the CI deployment identity.
+- Separated administrator-managed cluster resources from application deployment permissions.
 
 ### CI/CD
 - Uses pull request validation without registry or Kubernetes deployment credentials.
@@ -52,6 +53,7 @@ The objective is to reduce security risks before the application is exposed to e
 ├── k8s/
 │   ├── admin/
 │   │   ├── namespace.yaml
+│   │   ├── application-resources.yaml
 │   │   └── ci-deployer-rbac.yaml
 │   ├── deployment.yaml
 │   ├── networkpolicy.yaml
@@ -129,24 +131,29 @@ The stock adjustment endpoint requires the `x-api-key` request header.
 
 ## Deployment Prerequisites
 
-Before deploying to Kubernetes, an authorized administrator must:
+Before deploying to Kubernetes, an authorized administrator must prepare the cluster:
 
-1. Create the `stockdesk` namespace and configure its Pod Security settings.
-2. Create the `ci-deployer` ServiceAccount, Role, and RoleBinding.
-3. Create the Kubernetes Secret named `stockdesk-env` with the required application environment variables.
-4. Confirm the database address and configure the ingress controller and TLS.
-5. Configure GitHub Actions credentials:
+1. Create the `stockdesk` namespace and configure its Pod Security settings using `k8s/admin/namespace.yaml`.
+2. Create the application ServiceAccount and internal ClusterIP Service using `k8s/admin/application-resources.yaml`.
+3. Create the `ci-deployer` ServiceAccount, Role, and RoleBinding using `k8s/admin/ci-deployer-rbac.yaml`.
+4. Apply the NetworkPolicy and PodDisruptionBudget using `k8s/networkpolicy.yaml` and `k8s/pdb.yaml`.
+5. Create the Kubernetes Secret named `stockdesk-env` with the required application environment variables.
+6. Confirm the database address and configure the ingress controller and TLS.
+7. Configure GitHub Actions credentials:
    - `DEPLOY_TOKEN`: registry authentication token.
    - `KUBECONFIG`: Kubernetes deployment credentials, stored in the `test-cluster` GitHub Environment.
-6. Create and protect the `test-cluster` GitHub Environment.
-7. Protect the `main` branch and require successful pull request checks and code review.
+8. Create and protect the `test-cluster` GitHub Environment.
+9. Protect the `main` branch and require successful pull request checks and code review.
 
-The CI workflow assumes that the namespace, deployment identity, application Secret, registry, and Kubernetes cluster are already configured.
+The administrator must apply the namespace first, followed by the application resources, RBAC, NetworkPolicy, and PodDisruptionBudget. These resources are managed outside the CI deployment workflow.
+
+The CI workflow only deploys the application Deployment and checks its rollout status. It assumes the cluster, namespace, application resources, deployment identity, application Secret, registry, and network configuration are already prepared.
 
 ## Important Limitations
 
 - The database health check verifies TCP connectivity only; it does not authenticate or execute a SQL query.
 - The actual Kubernetes database address and ingress-controller namespace must be confirmed.
+- The PostgreSQL egress NetworkPolicy currently allows traffic to any destination on TCP port 5432; it should be restricted to the actual database destination once known.
 - NetworkPolicy enforcement depends on the cluster's CNI plugin.
 - The registry, cluster configuration, and deployment permissions must be verified in the target environment.
 - The ClusterIP Service requires a suitable ingress or gateway. Existing office and VPN access must be preserved before changing the current LoadBalancer access path.
