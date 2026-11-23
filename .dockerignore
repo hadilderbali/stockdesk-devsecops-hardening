@@ -1,0 +1,29 @@
+
+# Secrets and environment files
+.env
+.env.*
+
+# Git data and CI configuration
+.git
+.github
+
+# Dependencies installed on the host
+node_modules
+
+# Tests and generated output
+test
+coverage
+*.log
+
+# Local development configuration
+docker-compose.yml
+docker-compose.debug.yml
+
+# Kubernetes configuration
+k8s
+
+# Documentation
+README.md
+RISKS.md
+THREAT-NOTE.md
+DESIGN-NOTE.md

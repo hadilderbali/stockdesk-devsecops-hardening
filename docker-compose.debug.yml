@@ -1,0 +1,9 @@
+
+services:
+  app:
+    command:
+      - node
+      - --inspect=0.0.0.0:9229
+      - src/server.js
+    ports:
+      - "127.0.0.1:9229:9229"
